@@ -1,0 +1,13 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const html = fs.readFileSync('google-feed-preflight.html', 'utf8');
+const script = html.match(/<script>([\\s\\S]*?)<\\/script>/);
+assert.ok(script, 'checker script exists');
+assert.match(script[1], /function parseCSV/);
+assert.match(script[1], /function scan/);
+assert.match(script[1], /No file is sent to a server|No file upload/i);
+assert.match(html, /Local-only/);
+assert.match(html, /Download findings CSV/);
+console.log('PASS: checker source includes CSV parsing, scanning, local-only notice and findings export.');
