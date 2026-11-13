@@ -5,8 +5,10 @@ const vm = require('node:vm');
 const NativeURL = require('node:url').URL;
 
 const html = fs.readFileSync('google-feed-preflight.html', 'utf8');
-const match = html.match(/<script>([\\s\\S]*?)<\\/script>/);
-assert.ok(match, 'application script exists');
+const start = html.indexOf('<script>');
+const end = html.indexOf('</script>', start);
+assert.ok(start >= 0 && end > start, 'application script exists');
+const appScript = html.slice(start + '<script>'.length, end);
 
 class Element {
   constructor(id) { this.id=id; this.textContent=''; this.innerHTML=''; this.hidden=false; this.disabled=false; this.listeners={}; }
@@ -20,14 +22,17 @@ const document = {
   getElementById(id) { if(!elements.has(id)) elements.set(id,new Element(id)); return elements.get(id); },
   createElement(tag) { const el=new Element(tag); el.click=()=>{lastDownload={name:el.download,href:el.href};}; return el; }
 };
-class BlobStub { constructor(parts,opts={}) { this.parts=parts; this.type=opts.type||''; lastBlob=this; } text(){return Promise.resolve(this.parts.join(''));} }
+class BlobStub {
+  constructor(parts,opts={}) { this.parts=parts; this.type=opts.type||''; lastBlob=this; }
+  text() { return Promise.resolve(this.parts.join('')); }
+}
 class URLStub {
   constructor(value) { this.protocol = new NativeURL(value).protocol; }
   static createObjectURL() { return 'blob:test'; }
   static revokeObjectURL() {}
 }
 async function main() {
-  vm.runInNewContext(match[1],{document,Blob:BlobStub,URL:URLStub,console},{timeout:3000});
+  vm.runInNewContext(appScript,{document,Blob:BlobStub,URL:URLStub,console},{timeout:3000});
   elements.get('sample').click();
   assert.equal(elements.get('rows').textContent,'3');
   assert.equal(elements.get('critical').textContent,'4');
