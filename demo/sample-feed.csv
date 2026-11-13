@@ -1,0 +1,4 @@
+id,title,link,image_link,availability,price,brand,gtin
+SKU-1,Demo backpack,https://shop.example/p/1,https://cdn.example/1.jpg,in_stock,29.99 USD,North Trail,012345678905
+SKU-2,Missing brand,https://shop.example/p/2,not-a-url,in_stock,9.99,,
+SKU-2,Duplicate ID,https://shop.example/p/3,https://cdn.example/3.jpg,available,19 USD,Demo Brand,
