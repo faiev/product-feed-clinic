@@ -2,6 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
+const NativeURL = require('node:url').URL;
 
 const html = fs.readFileSync('google-feed-preflight.html', 'utf8');
 const match = html.match(/<script>([\\s\\S]*?)<\\/script>/);
@@ -20,22 +21,26 @@ const document = {
   createElement(tag) { const el=new Element(tag); el.click=()=>{lastDownload={name:el.download,href:el.href};}; return el; }
 };
 class BlobStub { constructor(parts,opts={}) { this.parts=parts; this.type=opts.type||''; lastBlob=this; } text(){return Promise.resolve(this.parts.join(''));} }
-const context = { document, Blob:BlobStub, URL:{createObjectURL:()=> 'blob:test', revokeObjectURL:()=>{}}, console };
-vm.runInNewContext(match[1],context,{timeout:3000});
-
-elements.get('sample').click();
-assert.equal(elements.get('rows').textContent,'3');
-assert.equal(elements.get('critical').textContent,'4');
-assert.equal(elements.get('warnings').textContent,'4');
-assert.equal(elements.get('clean').textContent,'1');
-assert.match(elements.get('body').innerHTML,/Duplicate product ID/);
-assert.match(elements.get('body').innerHTML,/Price format needs review/);
-assert.match(elements.get('body').innerHTML,/Image link is missing or not a valid HTTPS URL/);
-
-elements.get('csv').click();
-assert.equal(lastDownload.name,'feed-preflight-findings.csv');
-lastBlob.text().then(csv=>{
+class URLStub {
+  constructor(value) { this.protocol = new NativeURL(value).protocol; }
+  static createObjectURL() { return 'blob:test'; }
+  static revokeObjectURL() {}
+}
+async function main() {
+  vm.runInNewContext(match[1],{document,Blob:BlobStub,URL:URLStub,console},{timeout:3000});
+  elements.get('sample').click();
+  assert.equal(elements.get('rows').textContent,'3');
+  assert.equal(elements.get('critical').textContent,'4');
+  assert.equal(elements.get('warnings').textContent,'4');
+  assert.equal(elements.get('clean').textContent,'1');
+  assert.match(elements.get('body').innerHTML,/Duplicate product ID/);
+  assert.match(elements.get('body').innerHTML,/Price format needs review/);
+  assert.match(elements.get('body').innerHTML,/Image link is missing or not a valid HTTPS URL/);
+  elements.get('csv').click();
+  assert.equal(lastDownload.name,'feed-preflight-findings.csv');
+  const csv=await lastBlob.text();
   assert.match(csv,/duplicate_id/);
   assert.match(csv,/invalid_price/);
-  console.log('PASS: sample feed produces 3 rows, 4 critical findings, 4 warnings, 1 clean row; CSV export works.');
-}).catch(err=>{console.error(err);process.exitCode=1;});
+  console.log('PASS: 3 sample rows, 4 critical findings, 4 warnings, 1 clean row; CSV export works.');
+}
+main().catch(err=>{console.error(err);process.exitCode=1;});
