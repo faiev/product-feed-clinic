@@ -197,7 +197,7 @@ const $ = id => document.getElementById(id);
 const STORAGE_KEY = "one-pixel-studio-project-v1";
 const DEFAULT_PALETTE = ["#172b3a","#344b55","#53717a","#87a7a0","#d9e2c6","#f4edda","#f5c66d","#ef945e","#e96f55","#b85e62","#856f91","#5e8da8"];
 let w=24,h=24,pixels=[],palette=DEFAULT_PALETTE.slice(),selected=8,tool="brush";
-let undoStack=[],redoStack=[],drawing=false,strokeStart=null,strokeLast=null,strokeBefore=null,saveTimer=null;
+let undoStack=[],redoStack=[],drawing=false,strokeStart=null,strokeLast=null,saveTimer=null,focusedIndex=0;
 let savedProject=null;
 const grid=$("pixelGrid");
 
@@ -245,6 +245,7 @@ function renderGrid(){
   for(let i=0;i<pixels.length;i++){
     const cell=document.createElement("div");
     cell.className="pixel-cell";
+    cell.tabIndex=i===focusedIndex?0:-1;
     cell.dataset.index=String(i);
     cell.setAttribute("role","gridcell");
     cell.setAttribute("aria-label","Pixel "+(i%w+1)+", "+(Math.floor(i/w)+1)+", "+(pixels[i]||"transparent"));
@@ -261,7 +262,7 @@ function renderPalette(){
     const b=document.createElement("button");b.className="swatch"+(i===selected?" selected":"");
     b.style.backgroundColor=c;b.title=c.toUpperCase();b.setAttribute("aria-label","Select "+c);
     b.addEventListener("click",()=>{selected=i;syncColorUI();renderPalette()});
-    b.addEventListener("contextmenu",e=>{e.preventDefault();if(palette.length<=1){toast("Keep at least one palette color.");return}if(!confirm("Remove "+c.toUpperCase()+" from the palette? Existing pixels keep this color."))return;palette.splice(i,1);if(selected>=palette.length)selected=palette.length-1;syncColorUI();renderPalette();scheduleSave()});
+    b.addEventListener("contextmenu",e=>{e.preventDefault();if(palette.length<=1){toast("Keep at least one palette color.");return}if(!confirm("Remove "+c.toUpperCase()+" from the palette? Existing pixels keep this color."))return;palette.splice(i,1);if(i<selected)selected--;else if(i===selected)selected=Math.min(i,palette.length-1);syncColorUI();renderPalette();scheduleSave()});
     frag.appendChild(b);
   });
   $("paletteGrid").replaceChildren(frag);
@@ -295,7 +296,9 @@ function toast(message){
   clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("show"),2100);
 }
 function getCell(e){
-  const target=e.target.closest(".pixel-cell");if(!target)return null;
+  const direct=e.target&&e.target.closest?e.target.closest(".pixel-cell"):null;
+  const hit=direct||document.elementFromPoint(e.clientX,e.clientY);
+  const target=hit&&hit.closest?hit.closest(".pixel-cell"):null;if(!target)return null;
   const i=Number(target.dataset.index);return {i,x:i%w,y:Math.floor(i/w),el:target};
 }
 function paint(i,c){
@@ -329,7 +332,7 @@ grid.addEventListener("pointerdown",e=>{
     const c=pixels[p.i];if(c){let idx=palette.indexOf(c);if(idx<0){palette.push(c);idx=palette.length-1}selected=idx;renderPalette();syncColorUI()}setTool("brush");return;
   }
   if(tool==="fill"){remember();floodFill(p.i,palette[selected]);renderStats();scheduleSave();return}
-  remember();drawing=true;strokeStart=p;strokeLast=p;strokeBefore=snapshot();
+  remember();drawing=true;strokeStart=p;strokeLast=p;
   if(tool==="brush")paint(p.i,palette[selected]);
   else if(tool==="eraser")paint(p.i,null);
   grid.setPointerCapture(e.pointerId);
@@ -363,7 +366,7 @@ $("gridSize").addEventListener("change",e=>{
   renderAll();scheduleSave();
 });
 $("gridToggle").addEventListener("change",()=>grid.classList.toggle("no-grid",!$("gridToggle").checked));
-$("checkerToggle").addEventListener("change",e=>grid.style.backgroundColor=e.target.checked?"#fff":"#f3f0e9");
+$("checkerToggle").addEventListener("change",e=>{grid.style.backgroundImage=e.target.checked?"":"none";grid.style.backgroundColor=e.target.checked?"#e2e7df":"#f3f0e9"});
 $("colorPicker").addEventListener("input",e=>$("hexValue").value=e.target.value.toUpperCase());
 $("hexValue").addEventListener("change",e=>{
   let c=e.target.value.trim();if(!/^#[0-9a-fA-F]{6}$/.test(c)){toast("Enter a valid 6-digit hex color.");syncColorUI();return}
