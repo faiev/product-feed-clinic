@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f2f0e9">
+<meta name="description" content="One Pixel is a precise, local-first pixel art studio. One grid cell is always one pixel.">
+<title>One Pixel — Pixel Studio</title>
+<style>
+:root{--paper:#f2f0e9;--ink:#1d292d;--muted:#77817e;--line:#d8dcd5;--white:#fbfaf6;--lime:#d9f36a;--coral:#ee7358;--blue:#426b84;--shadow:0 16px 46px rgba(30,42,42,.08);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);font-synthesis:none}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);min-height:100vh}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(66,107,132,.35);outline-offset:2px}
+.shell{max-width:1500px;margin:0 auto;padding:25px 30px 28px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:4px 0 24px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:13px}
+.brandmark{width:38px;height:38px;background:var(--ink);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:3px;padding:7px;border-radius:10px}
+.brandmark i{background:var(--lime);display:block;border-radius:1px}
+.brandmark i:nth-child(2),.brandmark i:nth-child(4),.brandmark i:nth-child(8){opacity:.22}
+.brandname{font-size:15px;font-weight:850;letter-spacing:.13em}
+.brandname span{font-weight:450;color:var(--muted);letter-spacing:.06em;margin-left:5px}
+.topmeta{display:flex;align-items:center;gap:16px}
+.local-pill{font:600 10px ui-monospace,SFMono-Regular,monospace;letter-spacing:.12em;text-transform:uppercase;color:#53705e;background:#e4ebd8;border:1px solid #d4dfc3;padding:8px 11px;border-radius:99px}
+.local-pill:before{content:"";display:inline-block;width:6px;height:6px;background:#72a36d;border-radius:50%;margin:0 7px 1px 0}
+.save-state{font:11px ui-monospace,monospace;color:var(--muted)}
+.intro{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px 0 24px}
+.eyebrow,.section-kicker{font:700 10px ui-monospace,SFMono-Regular,monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(28px,4vw,42px);line-height:1.02;letter-spacing:-.055em;margin:8px 0 8px;font-weight:760}
+.intro p{margin:0;color:#65716e;font-size:13px;line-height:1.55}
+.intro-note{max-width:245px;border-left:2px solid var(--coral);padding:3px 0 3px 13px;color:#68736f;font-size:11px;line-height:1.5}
+.workspace{display:grid;grid-template-columns:184px minmax(340px,1fr) 246px;gap:14px;align-items:stretch}
+.panel{background:var(--white);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow)}
+.tools-panel,.inspector{padding:17px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.panel-head h2{font-size:11px;letter-spacing:.11em;text-transform:uppercase;margin:0;font-weight:800}
+.tool-list{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.tool{border:1px solid transparent;background:transparent;border-radius:9px;padding:10px 6px;color:#65706e;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:10px;transition:.15s}
+.tool .glyph{width:27px;height:27px;border-radius:8px;background:#f0f1eb;display:grid;place-items:center;color:var(--ink);font-size:16px;font-weight:650}
+.tool:hover{background:#f4f5ef}
+.tool.active{background:#edf2dc;border-color:#dfe8c4;color:#27372c}
+.tool.active .glyph{background:var(--lime)}
+.rule{height:1px;background:var(--line);margin:16px 0}
+.field-label{display:block;font:700 9px ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:#78817d;margin:0 0 8px}
+.field-row{display:flex;align-items:center;gap:7px}
+select,.text-field{width:100%;border:1px solid var(--line);background:#fffefa;border-radius:8px;padding:9px 10px;color:var(--ink);font-size:12px;min-width:0}
+.shortcut-list{display:grid;gap:8px}
+.shortcut{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:#707a76}
+kbd{font:10px ui-monospace,monospace;color:#58625f;background:#f0f1eb;border:1px solid #e0e3dc;border-radius:4px;padding:2px 5px}
+.stage{padding:17px 19px 16px;display:flex;flex-direction:column;min-width:0}
+.stage-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:13px}
+.stage-title{display:flex;align-items:center;gap:9px;min-width:0}
+.stage-title strong{font-size:12px;font-weight:750;white-space:nowrap}
+.stage-title span{font:10px ui-monospace,monospace;color:var(--muted)}
+.stage-actions{display:flex;align-items:center;gap:6px}
+.icon-button{border:1px solid var(--line);background:#fffefa;border-radius:7px;width:31px;height:31px;color:#586460;display:grid;place-items:center;font-size:15px}
+.icon-button:hover:not(:disabled){border-color:#9aa69e;background:#f4f5ef}
+.icon-button:disabled{opacity:.35;cursor:not-allowed}
+.canvas-wrap{flex:1;min-height:370px;display:grid;place-items:center;position:relative;background:#f7f6f0;border:1px solid #e5e7df;border-radius:11px;padding:22px;overflow:hidden}
+.canvas-wrap:before{content:"";position:absolute;inset:0;opacity:.24;pointer-events:none;background-image:radial-gradient(#c8cec4 .7px,transparent .7px);background-size:12px 12px}
+.pixel-grid{position:relative;z-index:1;width:min(100%,560px);aspect-ratio:1;display:grid;gap:1px;background:#bcc5bd;border:1px solid #bcc5bd;box-shadow:0 12px 35px rgba(20,35,35,.14);touch-action:none;user-select:none}
+.pixel-grid.no-grid{gap:0;border:0}
+.pixel-cell{min-width:0;min-height:0;border:0;padding:0;margin:0;border-radius:0;background:transparent;touch-action:none}
+.pixel-cell:focus{outline:1px solid var(--coral);outline-offset:-1px;z-index:2}
+.canvas-caption{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:12px;color:#78827e;font:10px ui-monospace,monospace}
+.canvas-caption strong{color:#47544f;font-weight:650}
+.inspector{display:flex;flex-direction:column;gap:17px}
+.palette-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.swatch{height:33px;border:2px solid rgba(29,41,45,.08);border-radius:7px;position:relative;transition:.12s}
+.swatch:hover{transform:translateY(-1px)}
+.swatch.selected{outline:2px solid var(--ink);outline-offset:2px}
+.swatch.selected:after{content:"";position:absolute;right:4px;bottom:4px;width:5px;height:5px;background:white;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.color-tools{display:flex;align-items:center;gap:7px;margin-top:10px}
+input[type=color]{width:38px;height:34px;border:1px solid var(--line);border-radius:8px;background:#fffefa;padding:3px;cursor:pointer}
+.color-tools .text-field{font:11px ui-monospace,monospace;text-transform:uppercase}
+.small-button{border:1px solid var(--line);background:#fffefa;color:#3d4b46;border-radius:8px;padding:8px 10px;font-size:10px;font-weight:700}
+.small-button:hover{background:#f0f2e9;border-color:#aab4a8}
+.small-button.primary{background:var(--ink);color:white;border-color:var(--ink)}
+.small-button.primary:hover{background:#31454a}
+.full{width:100%}
+.export-stack{display:grid;gap:7px}
+.export-row{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:#f3f4ee;border:1px solid #e7e9e1;border-radius:9px;padding:9px}
+.stat strong{display:block;font-size:17px;letter-spacing:-.04em}
+.stat span{font:9px ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:#7b8580}
+.check-row{display:flex;align-items:center;gap:8px;font-size:11px;color:#626e68}
+.check-row input{accent-color:#526f5c}
+.bottom-note{display:flex;justify-content:space-between;gap:15px;padding:16px 2px 0;color:#7d8782;font:10px ui-monospace,monospace}
+.bottom-note strong{color:#4f5c57}
+.hidden{display:none!important}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:#203035;color:#fff;padding:11px 15px;border-radius:9px;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:.2s;z-index:10}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:1050px){.workspace{grid-template-columns:160px minmax(300px,1fr)}.inspector{grid-column:1/-1;display:grid;grid-template-columns:1.2fr 1fr 1fr;align-items:start}.inspector .rule{display:none}.palette-area{grid-row:span 2}}
+@media(max-width:700px){.shell{padding:16px 13px 22px}.topbar{padding-bottom:16px}.topmeta{gap:8px}.save-state{display:none}.intro{padding:22px 0 19px;align-items:flex-start;flex-direction:column}.intro-note{max-width:none}.workspace{grid-template-columns:1fr}.tools-panel{padding:13px}.tools-panel .panel-head{margin-bottom:10px}.tool-list{grid-template-columns:repeat(6,1fr)}.tool{padding:6px 2px;font-size:9px}.tool .glyph{width:28px;height:28px}.tools-panel .rule,.tools-panel .shortcut-list,.tools-panel .size-area{display:none}.stage{padding:13px}.canvas-wrap{min-height:0;padding:12px}.pixel-grid{width:min(100%,560px)}.inspector{grid-column:auto;display:grid;grid-template-columns:1fr 1fr;gap:14px}.inspector .palette-area{grid-column:1/-1;grid-row:auto}.bottom-note{font-size:9px;flex-direction:column;gap:6px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+  <div class="brand"><div class="brandmark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brandname">ONE PIXEL <span>/ STUDIO</span></div></div>
+  <div class="topmeta"><span class="local-pill">Private by design</span><span class="save-state" id="saveState">LOCAL SAVE · READY</span></div>
+</header>
+<section class="intro">
+  <div><div class="eyebrow">A tiny studio for exact pixel art</div><h1>One cell. One color.<br>Zero ambiguity.</h1><p>Draw at the grid level. Every square is a real pixel — no blur, no surprise sub-pixels.</p></div>
+  <div class="intro-note">Everything runs in this browser. Your artwork stays on this device unless you export it.</div>
+</section>
+<main class="workspace">
+  <aside class="panel tools-panel">
+    <div class="panel-head"><h2>01 / Tools</h2><span class="section-kicker">Edit</span></div>
+    <div class="tool-list" id="toolList">
+      <button class="tool active" data-tool="brush" title="Brush (B)"><span class="glyph">✎</span>Brush</button>
+      <button class="tool" data-tool="eraser" title="Eraser (E)"><span class="glyph">◩</span>Eraser</button>
+      <button class="tool" data-tool="fill" title="Flood fill (G)"><span class="glyph">▧</span>Fill</button>
+      <button class="tool" data-tool="eyedropper" title="Eyedropper (I)"><span class="glyph">⌖</span>Pick</button>
+      <button class="tool" data-tool="line" title="Line"><span class="glyph">／</span>Line</button>
+      <button class="tool" data-tool="rect" title="Rectangle"><span class="glyph">□</span>Rect</button>
+    </div>
+    <div class="rule"></div>
+    <div class="size-area"><label class="field-label" for="gridSize">Canvas dimensions</label><select id="gridSize"><option value="16">16 × 16 · Tiny</option><option value="24" selected>24 × 24 · Small</option><option value="32">32 × 32 · Medium</option><option value="48">48 × 48 · Large</option><option value="64">64 × 64 · Detailed</option></select></div>
+    <div class="rule"></div>
+    <div class="shortcut-list">
+      <div class="field-label">Shortcuts</div>
+      <div class="shortcut"><span>Brush / Erase</span><span><kbd>B</kbd> <kbd>E</kbd></span></div>
+      <div class="shortcut"><span>Fill / Pick</span><span><kbd>G</kbd> <kbd>I</kbd></span></div>
+      <div class="shortcut"><span>Undo / Redo</span><span><kbd>⌘ Z</kbd> <kbd>⇧ Z</kbd></span></div>
+      <div class="shortcut"><span>Save project</span><span><kbd>⌘ S</kbd></span></div>
+    </div>
+  </aside>
+
+  <section class="panel stage">
+    <div class="stage-head">
+      <div class="stage-title"><strong>Untitled artwork</strong><span id="dimensionLabel">24 × 24 PX</span></div>
+      <div class="stage-actions">
+        <button class="icon-button" id="undoBtn" aria-label="Undo" title="Undo (Ctrl/Cmd+Z)" disabled>↶</button>
+        <button class="icon-button" id="redoBtn" aria-label="Redo" title="Redo (Ctrl/Cmd+Shift+Z)" disabled>↷</button>
+        <button class="icon-button" id="clearBtn" aria-label="Clear canvas" title="Clear canvas">⌫</button>
+      </div>
+    </div>
+    <div class="canvas-wrap">
+      <div id="pixelGrid" class="pixel-grid" role="grid" aria-label="Pixel art canvas"></div>
+    </div>
+    <div class="canvas-caption"><span>GRID <strong id="gridCaption">24 × 24</strong> · <strong id="fillCaption">—</strong> filled</span><span id="activeToolCaption">BRUSH TOOL</span></div>
+  </section>
+
+  <aside class="panel inspector">
+    <section class="palette-area">
+      <div class="panel-head"><h2>02 / Palette</h2><span class="section-kicker" id="colorCount">12 COLORS</span></div>
+      <div class="palette-grid" id="paletteGrid" aria-label="Color palette"></div>
+      <div class="color-tools">
+        <input type="color" id="colorPicker" value="#f06b4e" aria-label="Choose custom color">
+        <input class="text-field" type="text" id="hexValue" value="#F06B4E" maxlength="7" aria-label="Hex color">
+        <button class="small-button" id="addColorBtn" title="Add color to palette">+</button>
+      </div>
+      <div style="margin-top:8px;color:#929b95;font-size:9px;line-height:1.45">Select a swatch, or add any color. Right-click a swatch to remove it.</div>
+    </section>
+    <div class="rule"></div>
+    <section>
+      <div class="panel-head"><h2>03 / Export</h2><span class="section-kicker">Output</span></div>
+      <div class="export-stack">
+        <button class="small-button primary full" id="pngBtn">↓ Download PNG · 1×</button>
+        <div class="export-row"><button class="small-button" id="scaledBtn">PNG · 16×</button><button class="small-button" id="svgBtn">SVG · Vector</button></div>
+        <div class="export-row"><button class="small-button" id="jsonBtn">Project JSON</button><button class="small-button" id="importProjectBtn">Open JSON</button></div>
+        <input class="hidden" type="file" id="projectInput" accept=".json,application/json">
+      </div>
+    </section>
+    <div class="rule"></div>
+    <section>
+      <div class="panel-head"><h2>04 / Canvas</h2><span class="section-kicker">View</span></div>
+      <div style="display:grid;gap:10px">
+        <label class="check-row"><input type="checkbox" id="gridToggle" checked> Show pixel boundaries</label>
+        <label class="check-row"><input type="checkbox" id="checkerToggle" checked> Transparency checkerboard</label>
+        <button class="small-button full" id="importImageBtn">＋ Import an image</button>
+        <input class="hidden" type="file" id="imageInput" accept="image/*">
+        <button class="small-button full" id="demoBtn">Restore starter artwork</button>
+      </div>
+    </section>
+    <div class="rule"></div>
+    <section>
+      <div class="stats">
+        <div class="stat"><strong id="pixelStat">—</strong><span>Painted cells</span></div>
+        <div class="stat"><strong id="usedColorStat">—</strong><span>Colors used</span></div>
+      </div>
+    </section>
+  </aside>
+</main>
+<footer class="bottom-note"><span><strong>ONE PIXEL STUDIO</strong> · BUILT FOR THE GRID, NOT THE BLUR</span><span>NO ACCOUNT · NO UPLOADS · NO SUBSCRIPTIONS</span></footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const STORAGE_KEY = "one-pixel-studio-project-v1";
+const DEFAULT_PALETTE = ["#172b3a","#344b55","#53717a","#87a7a0","#d9e2c6","#f4edda","#f5c66d","#ef945e","#e96f55","#b85e62","#856f91","#5e8da8"];
+let w=24,h=24,pixels=[],palette=DEFAULT_PALETTE.slice(),selected=8,tool="brush";
+let undoStack=[],redoStack=[],drawing=false,strokeStart=null,strokeLast=null,strokeBefore=null,saveTimer=null;
+let savedProject=null;
+const grid=$("pixelGrid");
+
+function blank(size){return Array(size*size).fill(null)}
+function rect(arr,size,x1,y1,x2,y2,color){
+  for(let y=Math.max(0,y1);y<=Math.min(size-1,y2);y++)for(let x=Math.max(0,x1);x<=Math.min(size-1,x2);x++)arr[y*size+x]=color;
+}
+function demo(){
+  const s=24,a=blank(s),c=DEFAULT_PALETTE;
+  rect(a,s,0,0,23,23,c[0]);
+  [[2,3],[18,3],[20,8],[5,18],[17,20],[7,7],[22,15]].forEach(([x,y])=>{a[y*s+x]=c[6]});
+  a[2*s+12]=c[4];a[3*s+11]=c[4];a[3*s+13]=c[4];
+  rect(a,s,3,9,6,12,c[10]);rect(a,s,2,10,7,11,c[10]);
+  rect(a,s,4,10,5,11,c[6]);a[8*s+4]=c[6];a[13*s+5]=c[7];a[12*s+2]=c[7];
+  a[5*s+18]=c[3];a[6*s+19]=c[3];a[7*s+18]=c[3];
+  rect(a,s,10,7,13,14,c[5]);
+  a[5*s+11]=c[5];a[5*s+12]=c[5];rect(a,s,11,4,12,4,c[5]);
+  rect(a,s,11,8,12,10,c[2]);rect(a,s,11,9,12,9,c[9]);
+  rect(a,s,9,13,10,15,c[8]);rect(a,s,13,13,14,15,c[8]);
+  rect(a,s,11,15,12,17,c[7]);rect(a,s,11,17,12,18,c[6]);
+  a[14*s+10]=c[8];a[14*s+13]=c[8];
+  rect(a,s,8,19,15,19,c[1]);a[20*s+9]=c[3];a[20*s+14]=c[3];
+  return a;
+}
+function snapshot(){return {w,h,pixels:pixels.slice(),palette:palette.slice(),selected}}
+function remember(){
+  undoStack.push(snapshot());
+  if(undoStack.length>60)undoStack.shift();
+  redoStack=[];
+  updateHistoryButtons();
+}
+function restore(s){
+  w=s.w;h=s.h;pixels=s.pixels.slice();palette=s.palette.slice();selected=Math.min(s.selected,palette.length-1);
+  $("gridSize").value=String(w);renderAll();scheduleSave();updateHistoryButtons();
+}
+function undo(){if(!undoStack.length)return;redoStack.push(snapshot());restore(undoStack.pop());}
+function redo(){if(!redoStack.length)return;undoStack.push(snapshot());restore(redoStack.pop());}
+function updateHistoryButtons(){$("undoBtn").disabled=!undoStack.length;$("redoBtn").disabled=!redoStack.length}
+function colorAt(i){return pixels[i]||"transparent"}
+function renderGrid(){
+  grid.style.gridTemplateColumns="repeat("+w+", minmax(0,1fr))";
+  grid.style.gridTemplateRows="repeat("+h+", minmax(0,1fr))";
+  grid.classList.toggle("no-grid",!$("gridToggle").checked);
+  const frag=document.createDocumentFragment();
+  for(let i=0;i<pixels.length;i++){
+    const cell=document.createElement("div");
+    cell.className="pixel-cell";
+    cell.dataset.index=String(i);
+    cell.setAttribute("role","gridcell");
+    cell.setAttribute("aria-label","Pixel "+(i%w+1)+", "+(Math.floor(i/w)+1)+", "+(pixels[i]||"transparent"));
+    cell.style.backgroundColor=colorAt(i);
+    frag.appendChild(cell);
+  }
+  grid.replaceChildren(frag);
+  $("dimensionLabel").textContent=w+" × "+h+" PX";
+  $("gridCaption").textContent=w+" × "+h;
+}
+function renderPalette(){
+  const frag=document.createDocumentFragment();
+  palette.forEach((c,i)=>{
+    const b=document.createElement("button");b.className="swatch"+(i===selected?" selected":"");
+    b.style.backgroundColor=c;b.title=c.toUpperCase();b.setAttribute("aria-label","Select "+c);
+    b.addEventListener("click",()=>{selected=i;syncColorUI();renderPalette()});
+    b.addEventListener("contextmenu",e=>{e.preventDefault();if(palette.length<=1){toast("Keep at least one palette color.");return}if(!confirm("Remove "+c.toUpperCase()+" from the palette? Existing pixels keep this color."))return;palette.splice(i,1);if(selected>=palette.length)selected=palette.length-1;syncColorUI();renderPalette();scheduleSave()});
+    frag.appendChild(b);
+  });
+  $("paletteGrid").replaceChildren(frag);
+  $("colorCount").textContent=palette.length+" COLORS";
+}
+function syncColorUI(){
+  const c=palette[selected]||"#000000";$("colorPicker").value=c;$("hexValue").value=c.toUpperCase();
+}
+function renderStats(){
+  const painted=pixels.filter(Boolean),used=new Set(painted);
+  $("pixelStat").textContent=painted.length.toLocaleString();
+  $("usedColorStat").textContent=used.size;
+  $("fillCaption").textContent=painted.length.toLocaleString();
+}
+function renderAll(){renderGrid();renderPalette();renderStats();updateHistoryButtons();setTool(tool)}
+function setTool(name){
+  tool=name;
+  document.querySelectorAll(".tool").forEach(b=>b.classList.toggle("active",b.dataset.tool===name));
+  $("activeToolCaption").textContent=name.toUpperCase()+" TOOL";
+}
+function scheduleSave(){
+  $("saveState").textContent="SAVING LOCALLY…";
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(snapshot()));$("saveState").textContent="LOCAL SAVE · JUST NOW"}
+    catch(e){$("saveState").textContent="LOCAL SAVE · UNAVAILABLE"}
+  },280);
+}
+function toast(message){
+  const t=$("toast");t.textContent=message;t.classList.add("show");
+  clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("show"),2100);
+}
+function getCell(e){
+  const target=e.target.closest(".pixel-cell");if(!target)return null;
+  const i=Number(target.dataset.index);return {i,x:i%w,y:Math.floor(i/w),el:target};
+}
+function paint(i,c){
+  if(i<0||i>=pixels.length||pixels[i]===c)return;
+  pixels[i]=c;
+  const el=grid.children[i];if(el){el.style.backgroundColor=c||"transparent";el.setAttribute("aria-label","Pixel "+(i%w+1)+", "+(Math.floor(i/w)+1)+", "+(c||"transparent"));}
+}
+function floodFill(start,replacement){
+  const target=pixels[start];if(target===replacement)return;
+  const stack=[start],seen=new Uint8Array(pixels.length);
+  while(stack.length){
+    const i=stack.pop();if(i<0||i>=pixels.length||seen[i]||pixels[i]!==target)continue;
+    seen[i]=1;paint(i,replacement);
+    const x=i%w,y=Math.floor(i/w);
+    if(x>0)stack.push(i-1);if(x<w-1)stack.push(i+1);if(y>0)stack.push(i-w);if(y<h-1)stack.push(i+w);
+  }
+}
+function line(x0,y0,x1,y1,c){
+  let dx=Math.abs(x1-x0),sx=x0<x1?1:-1,dy=-Math.abs(y1-y0),sy=y0<y1?1:-1,err=dx+dy;
+  while(true){paint(y0*w+x0,c);if(x0===x1&&y0===y1)break;const e2=2*err;if(e2>=dy){err+=dy;x0+=sx}if(e2<=dx){err+=dx;y0+=sy}}
+}
+function drawRectangle(x0,y0,x1,y1,c){
+  const minX=Math.min(x0,x1),maxX=Math.max(x0,x1),minY=Math.min(y0,y1),maxY=Math.max(y0,y1);
+  for(let x=minX;x<=maxX;x++){paint(minY*w+x,c);paint(maxY*w+x,c)}
+  for(let y=minY;y<=maxY;y++){paint(y*w+minX,c);paint(y*w+maxX,c)}
+}
+grid.addEventListener("pointerdown",e=>{
+  const p=getCell(e);if(!p)return;
+  e.preventDefault();
+  if(tool==="eyedropper"){
+    const c=pixels[p.i];if(c){let idx=palette.indexOf(c);if(idx<0){palette.push(c);idx=palette.length-1}selected=idx;renderPalette();syncColorUI()}setTool("brush");return;
+  }
+  if(tool==="fill"){remember();floodFill(p.i,palette[selected]);renderStats();scheduleSave();return}
+  remember();drawing=true;strokeStart=p;strokeLast=p;strokeBefore=snapshot();
+  if(tool==="brush")paint(p.i,palette[selected]);
+  else if(tool==="eraser")paint(p.i,null);
+  grid.setPointerCapture(e.pointerId);
+  renderStats();
+});
+grid.addEventListener("pointermove",e=>{
+  if(!drawing)return;const p=getCell(e);if(!p)return;
+  if(tool==="brush"||tool==="eraser"){
+    if(strokeLast)line(strokeLast.x,strokeLast.y,p.x,p.y,tool==="eraser"?null:palette[selected]);
+    strokeLast=p;renderStats();
+  }
+});
+grid.addEventListener("pointerup",e=>{
+  if(!drawing)return;const p=getCell(e)||strokeLast||strokeStart;
+  if(tool==="line"&&p)line(strokeStart.x,strokeStart.y,p.x,p.y,palette[selected]);
+  if(tool==="rect"&&p)drawRectangle(strokeStart.x,strokeStart.y,p.x,p.y,palette[selected]);
+  drawing=false;strokeStart=null;strokeLast=null;renderStats();scheduleSave();
+});
+grid.addEventListener("pointercancel",()=>{drawing=false;strokeStart=null;strokeLast=null;scheduleSave()});
+document.querySelectorAll(".tool").forEach(b=>b.addEventListener("click",()=>setTool(b.dataset.tool)));
+$("undoBtn").addEventListener("click",undo);$("redoBtn").addEventListener("click",redo);
+$("clearBtn").addEventListener("click",()=>{
+  if(!confirm("Clear every pixel on this canvas?"))return;
+  remember();pixels=blank(w);renderGrid();renderStats();scheduleSave();toast("Canvas cleared.");
+});
+$("gridSize").addEventListener("change",e=>{
+  const n=Number(e.target.value);if(n===w)return;
+  if(!confirm("Resize to "+n+" × "+n+"? Artwork will be resampled to the new grid.")){e.target.value=String(w);return}
+  remember();const old=pixels.slice(),ow=w,oh=h;w=n;h=n;pixels=blank(n);
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){const ox=Math.min(ow-1,Math.floor(x*ow/n)),oy=Math.min(oh-1,Math.floor(y*oh/n));pixels[y*n+x]=old[oy*ow+ox]}
+  renderAll();scheduleSave();
+});
+$("gridToggle").addEventListener("change",()=>grid.classList.toggle("no-grid",!$("gridToggle").checked));
+$("checkerToggle").addEventListener("change",e=>grid.style.backgroundColor=e.target.checked?"#fff":"#f3f0e9");
+$("colorPicker").addEventListener("input",e=>$("hexValue").value=e.target.value.toUpperCase());
+$("hexValue").addEventListener("change",e=>{
+  let c=e.target.value.trim();if(!/^#[0-9a-fA-F]{6}$/.test(c)){toast("Enter a valid 6-digit hex color.");syncColorUI();return}
+  c=c.toLowerCase();const idx=palette.indexOf(c);if(idx>=0){selected=idx;renderPalette()}else{palette.push(c);selected=palette.length-1;renderPalette()}syncColorUI();scheduleSave();
+});
+$("addColorBtn").addEventListener("click",()=>{
+  let c=$("colorPicker").value.toLowerCase();if(palette.includes(c)){selected=palette.indexOf(c);toast("That color is already in the palette.")}else{palette.push(c);selected=palette.length-1;toast("Color added to palette.")}renderPalette();syncColorUI();scheduleSave();
+});
+function download(name,type,content){
+  const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function canvasFromPixels(scale){
+  const c=document.createElement("canvas");c.width=w*scale;c.height=h*scale;
+  const ctx=c.getContext("2d");ctx.imageSmoothingEnabled=false;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const col=pixels[y*w+x];if(col){ctx.fillStyle=col;ctx.fillRect(x*scale,y*scale,scale,scale)}}
+  return c;
+}
+function exportPNG(scale){
+  const c=canvasFromPixels(scale);
+  c.toBlob(blob=>{if(!blob){toast("PNG export failed.");return}const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="one-pixel-"+w+"x"+h+"-"+scale+"x.png";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast("PNG exported — "+(w*scale)+" × "+(h*scale)+" px.");},"image/png");
+}
+$("pngBtn").addEventListener("click",()=>exportPNG(1));$("scaledBtn").addEventListener("click",()=>exportPNG(16));
+$("svgBtn").addEventListener("click",()=>{
+  const shapes=[];for(let y=0;y<h;y++)for(let x=0;x<w;x++){const c=pixels[y*w+x];if(c)shapes.push('<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>')}
+  const svg='<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" shape-rendering="crispEdges">\n'+shapes.join("\n")+'\n</svg>';
+  download("one-pixel-"+w+"x"+h+".svg","image/svg+xml;charset=utf-8",svg);toast("Crisp vector SVG exported.");
+});
+$("jsonBtn").addEventListener("click",()=>{download("one-pixel-project.json","application/json",JSON.stringify({app:"One Pixel Studio",version:1,...snapshot()},null,2));toast("Project file exported.")});
+$("importProjectBtn").addEventListener("click",()=>$("projectInput").click());
+$("projectInput").addEventListener("change",async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{
+    const data=JSON.parse(await file.text());
+    if(![16,24,32,48,64].includes(data.w)||data.h!==data.w||!Array.isArray(data.pixels)||data.pixels.length!==data.w*data.h||!Array.isArray(data.palette)||!data.palette.length)throw new Error("Invalid project structure");
+    if(data.palette.some(c=>!/^#[0-9a-fA-F]{6}$/.test(c))||data.pixels.some(c=>c!==null&&!/^#[0-9a-fA-F]{6}$/.test(c)))throw new Error("Invalid color data");
+    remember();restore({w:data.w,h:data.h,pixels:data.pixels,palette:data.palette,selected:Number.isInteger(data.selected)?data.selected:0});toast("Project opened.");
+  }catch(err){toast("Could not open that project file.")}
+  e.target.value="";
+});
+$("importImageBtn").addEventListener("click",()=>$("imageInput").click());
+$("imageInput").addEventListener("change",e=>{
+  const file=e.target.files[0];if(!file)return;
+  if(!file.type.startsWith("image/")){toast("Choose an image file.");return}
+  const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{
+    const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d");
+    ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,w,h);
+    const scale=Math.min(w/img.width,h/img.height),dw=Math.max(1,Math.round(img.width*scale)),dh=Math.max(1,Math.round(img.height*scale));
+    ctx.drawImage(img,Math.floor((w-dw)/2),Math.floor((h-dh)/2),dw,dh);
+    const data=ctx.getImageData(0,0,w,h).data,next=blank(w);
+    for(let i=0;i<w*h;i++){
+      const alpha=data[i*4+3];if(alpha<32)continue;
+      const hex="#"+[data[i*4],data[i*4+1],data[i*4+2]].map(v=>v.toString(16).padStart(2,"0")).join("");
+      let best=palette[0],dist=Infinity;
+      palette.forEach(col=>{const r=parseInt(col.slice(1,3),16)-data[i*4],g=parseInt(col.slice(3,5),16)-data[i*4+1],b=parseInt(col.slice(5,7),16)-data[i*4+2],d=r*r+g*g+b*b;if(d<dist){dist=d;best=col}});
+      next[i]=best;
+    }
+    remember();pixels=next;renderGrid();renderStats();scheduleSave();URL.revokeObjectURL(url);toast("Image converted to "+w+" × "+h+" grid cells.");
+  };
+  img.onerror=()=>{URL.revokeObjectURL(url);toast("Could not read that image.")};
+  img.src=url;e.target.value="";
+});
+$("demoBtn").addEventListener("click",()=>{
+  if(!confirm("Restore the starter artwork? Your current canvas will be replaced."))return;
+  remember();w=24;h=24;palette=DEFAULT_PALETTE.slice();selected=8;pixels=demo();$("gridSize").value="24";renderAll();scheduleSave();toast("Starter artwork restored.");
+});
+document.addEventListener("keydown",e=>{
+  const tag=document.activeElement&&document.activeElement.tagName;
+  const editing=tag==="INPUT"||tag==="SELECT"||tag==="TEXTAREA";
+  const mod=e.ctrlKey||e.metaKey;
+  if(mod&&e.key.toLowerCase()==="z"){e.preventDefault();if(e.shiftKey)redo();else undo();return}
+  if(mod&&e.key.toLowerCase()==="s"){e.preventDefault();scheduleSave();toast("Saved on this device.");return}
+  if(editing)return;
+  const keys={b:"brush",e:"eraser",g:"fill",i:"eyedropper"};
+  if(keys[e.key.toLowerCase()])setTool(keys[e.key.toLowerCase()]);
+  if(e.key==="Escape")setTool("brush");
+});
+function init(){
+  let restored=false;
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw){const data=JSON.parse(raw);if([16,24,32,48,64].includes(data.w)&&data.h===data.w&&Array.isArray(data.pixels)&&data.pixels.length===data.w*data.h&&Array.isArray(data.palette)&&data.palette.length&&data.palette.every(c=>/^#[0-9a-fA-F]{6}$/.test(c))&&data.pixels.every(c=>c===null||/^#[0-9a-fA-F]{6}$/.test(c))){
+      w=data.w;h=data.h;pixels=data.pixels;palette=data.palette;selected=Math.min(Number(data.selected)||0,palette.length-1);$("gridSize").value=String(w);restored=true;
+    }}
+  }catch(e){}
+  if(!restored)pixels=demo();
+  renderAll();syncColorUI();$("saveState").textContent=restored?"LOCAL SAVE · RESTORED":"LOCAL SAVE · READY";
+}
+init();
+})();
+</script>
+</body>
+</html>
