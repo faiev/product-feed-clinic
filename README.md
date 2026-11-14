@@ -41,3 +41,8 @@ This repository is intended to publish as a static GitHub Pages site from the `m
 ## Status
 
 Pilot concept. No customer, marketplace listing, paid order or revenue is being claimed.
+
+## Standalone browser tool
+
+- `pixel-forge/` — **One Pixel Studio**, a local-first pixel editor with exact grid cells, palette tools, undo/redo, image import, and PNG/SVG/JSON export. It is a separate static app and does not change the Product Feed Clinic pages.
+- Once GitHub Pages is enabled for `main / (root)`, open it at: https://faiev.github.io/product-feed-clinic/pixel-forge/
